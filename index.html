@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Call Analytics Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="side-logo">↗</div>
+      <div><div class="side-title">Call Analytics</div><div class="side-sub">Campaign Reporting</div></div>
+    </div>
+    <nav class="nav">
+      <a class="nav-item active" href="#dashboard"><span>⌂</span>Dashboard</a>
+      <a class="nav-item" href="#campaign-performance"><span>▦</span>Campaigns</a>
+      <a class="nav-item" href="#daily-reports"><span>▤</span>Daily Reports</a>
+      <a class="nav-item" href="#upload-card"><span>↥</span>Upload Data</a>
+      <button class="nav-item nav-button" id="manageBtn"><span>⚙</span>Campaign Setup</button>
+    </nav>
+    <div class="side-footer">Local browser processing<br>CSV / XLSX supported</div>
+  </aside>
+
+  <main class="main" id="dashboard">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">OPERATIONS DASHBOARD</div>
+        <h1>Call Campaign Overview</h1>
+        <p>Track answered, drop and unique customer calls by campaign.</p>
+      </div>
+      <div class="head-actions">
+        <button class="btn" id="manageBtnTop" type="button" onclick="document.getElementById('manageBtn').click()">⚙ Manage Campaigns</button>
+        <label class="btn primary upload-top" for="file">↑ Upload Report</label>
+      </div>
+    </div>
+
+    <section class="card upload-card" id="upload-card">
+      <div class="upload-icon">↑</div>
+      <div class="upload-copy">
+        <div class="upload-title">Upload raw call report</div>
+        <div>Upload CSV or Excel. Data stays in this browser.</div>
+        <div id="status" class="status">No file selected.</div>
+      </div>
+      <input id="file" class="native-file" type="file" accept=".csv,.xlsx,.xls">
+      <button class="btn primary process" id="processBtn" type="button" disabled>Process Report</button>
+    </section>
+
+    <div id="report" class="hidden">
+      <section class="card filters-card">
+        <div class="section-row">
+          <div class="sectiontitle">Filters</div>
+          <div class="quick-filters"><button class="mini-btn" id="todayBtn" type="button">Today</button><button class="mini-btn" id="last7Btn" type="button">Last 7 Days</button><button class="mini-btn" id="last30Btn" type="button">Last 30 Days</button><button class="mini-btn" id="clearBtn" type="button">Reset</button></div>
+        </div>
+        <div class="filters-grid">
+          <div class="field"><label>From Date</label><input type="date" id="fromDate"></div>
+          <div class="field"><label>To Date</label><input type="date" id="toDate"></div>
+          <div class="field"><label>From Time</label><input type="time" id="fromTime"></div>
+          <div class="field"><label>To Time</label><input type="time" id="toTime"></div>
+          <div class="field"><label>Call Status</label><select><option>Answered + Abandoned</option></select></div>
+        </div>
+      </section>
+
+      <section class="metrics">
+        <div class="metric"><div class="metric-top"><span>Current Campaigns</span><i>▦</i></div><strong id="mCampaigns">0</strong><small>Campaigns with identified calls</small></div>
+        <div class="metric"><div class="metric-top"><span>Answered Calls</span><i>✓</i></div><strong id="mAnswered" class="green">0</strong><small>Unique customer numbers</small></div>
+        <div class="metric"><div class="metric-top"><span>Drop Calls</span><i>×</i></div><strong id="mDropped" class="red">0</strong><small>Abandoned / dropped</small></div>
+        <div class="metric"><div class="metric-top"><span>Unique Customers</span><i>◉</i></div><strong id="mUnique">0</strong><small>Answered + drop sets</small></div>
+        <div class="metric"><div class="metric-top"><span>Answer Rate</span><i>%</i></div><strong id="answerRate">0%</strong><small id="answerRateText">No identified calls</small></div>
+      </section>
+
+      <div class="notice" id="unmappedNotice"><span>⚠</span><span>Unmapped calls are shown separately when the uploaded report contains rows that cannot be assigned to a campaign.</span></div>
+
+      <section class="chart-grid">
+        <div class="card chart-card">
+          <div class="chart-head"><div><h2>Daily Call Trend</h2><p>Selected report range</p></div><div class="legend"><span><b class="dot blue"></b>Answered</span><span><b class="dot red-dot"></b>Drop</span></div></div>
+          <div class="trend" id="trendChart"><div class="trend-empty">Process a report to view call activity.</div></div>
+        </div>
+        <div class="card chart-card status-card">
+          <div class="chart-head"><div><h2>Call Status</h2><p>Identified calls only</p></div></div>
+          <div class="status-layout"><div class="donut" id="donut"><div><strong id="donutRate">0%</strong><span>answered</span></div></div><div class="status-side"><div><span>Answered</span><b class="green" id="statusAnswered">0</b></div><div><span>Drop Calls</span><b class="red" id="statusDropped">0</b></div><hr><div class="top-campaigns-title">Top campaigns</div><ol id="topCampaigns"><li>Waiting for report...</li></ol></div></div>
+        </div>
+      </section>
+
+      <section class="card table-card" id="campaign-performance">
+        <div class="section-row table-title"><div><h2>Campaign Performance</h2><p>Campaign is resolved from Virtual/Sr Number + IVR/DTMF/Queue.</p></div><div class="actions"><input class="search" id="search" placeholder="Search campaign..."><button class="btn" id="csvBtn">↓ CSV</button><button class="btn" id="xlsxBtn">↓ Excel</button></div></div>
+        <div class="tablewrap"><table><thead><tr><th>Campaign Name</th><th class="num">Received / Answered</th><th class="num">Drop Calls</th><th class="num">Total</th><th class="num">Answer Rate</th></tr></thead><tbody id="campaignBody"></tbody></table></div>
+      </section>
+
+      <section class="card table-card" id="daily-reports">
+        <div class="table-title"><div><h2>Daily Reports</h2><p>Unique customer numbers are de-duplicated within each status for each day.</p></div></div>
+        <div class="tablewrap"><table><thead><tr><th>Date</th><th class="num">Campaigns</th><th class="num">Answered</th><th class="num">Drop Calls</th><th class="num">Unique Customers</th></tr></thead><tbody id="dailyBody"></tbody></table></div>
+      </section>
+    </div>
+
+    <div id="empty" class="card empty-card"><div class="empty">Upload a call report to generate your campaign dashboard.</div></div>
+    <div class="footer">Status logic: Answered = Connected/Answered. Drop Calls = Abandoned/Dropped. Missed calls are excluded. Current campaigns are controlled from Campaign Setup.</div>
+  </main>
+</div>
+
+<div id="modal" class="modal hidden">
+  <div class="modalbox">
+    <div class="section-row"><div><div class="sectiontitle">Manage Campaigns</div><div class="small">Add or edit mappings without changing the HTML code.</div></div><button class="btn" id="closeModal">✕</button></div>
+    <div class="notice modal-notice">For numbers shared by multiple campaigns, use the DTMF/Queue value to distinguish the campaign. Leave it blank for a unique Sr Number.</div>
+    <div class="mappingform"><div class="field"><label>Sr / Virtual Number</label><input id="newNum" placeholder="919..."></div><div class="field"><label>DTMF / Queue</label><input id="newDtmf" placeholder="4 or Press4new"></div><div class="field"><label>Campaign Name</label><input id="newName" placeholder="Campaign name"></div><button class="btn primary" id="addMap">Add</button></div>
+    <div class="tablewrap modal-table"><table><thead><tr><th>Sr Number</th><th>DTMF / Queue</th><th>Campaign</th><th>Action</th></tr></thead><tbody id="mapBody"></tbody></table></div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+// UI bridge only. No report-processing/classification logic is changed here.
+(function(){
+  const $=id=>document.getElementById(id);
+  const file=$('file');
+
+  // The top upload control is a real <label for="file"> so the browser opens
+  // the native file picker without relying on a programmatic hidden-input click.
+  // The main file input handler remains the original handler in script.js.
+
+  const manageTop=$('manageBtnTop');
+  if(manageTop) manageTop.onclick=()=>$('manageBtn').click();
+
+  // Keep the dashboard hidden until Process Report is explicitly clicked.
+  const processBtn=$('processBtn');
+  if(processBtn) processBtn.addEventListener('click',()=>setTimeout(paintUI,50));
+
+  if(file) file.addEventListener('change',()=>setTimeout(()=>{
+    // Only update the visual upload state here; parsing remains in script.js.
+    const has=file.files && file.files.length>0;
+    if(!has) return;
+    $('status').title=file.files[0].name;
+  },0));
+
+  // Quick date presets are UI filters only and then use the existing process().
+  function fmt(d){return d.toISOString().slice(0,10)}
+  function preset(days){
+    if(!$('fromDate')||!$('toDate')) return;
+    const end=new Date(); const start=new Date(); start.setDate(end.getDate()-days+1);
+    $('fromDate').value=fmt(start); $('toDate').value=fmt(end);
+    if(window.rawRowsForUI && typeof process==='function') process();
+  }
+  const today=$('todayBtn'), last7=$('last7Btn'), last30=$('last30Btn');
+  if(today) today.onclick=()=>preset(1);
+  if(last7) last7.onclick=()=>preset(7);
+  if(last30) last30.onclick=()=>preset(30);
+
+  function paintUI(){
+    if($('report') && $('report').classList.contains('hidden')) return;
+    const a=+$('mAnswered').textContent.replace(/,/g,'')||0;
+    const d=+$('mDropped').textContent.replace(/,/g,'')||0;
+    const total=a+d, rate=total?Math.round(a/total*100):0;
+    $('answerRate').textContent=rate+'%';
+    $('answerRateText').textContent=total?`${a.toLocaleString()} answered of ${total.toLocaleString()} identified calls`:'No identified calls';
+    $('statusAnswered').textContent=a.toLocaleString();
+    $('statusDropped').textContent=d.toLocaleString();
+    $('donutRate').textContent=rate+'%';
+    $('donut').style.setProperty('--answered',rate+'%');
+    const rows=window.report||[];
+
+    // Display-only table polish. Uses the values already produced by the
+    // existing process() function; it does not recalculate or alter report logic.
+    const body=$('campaignBody');
+    if(body){
+      body.querySelectorAll('tr').forEach(tr=>{
+        if(tr.cells.length!==4) return;
+        const a=Number(tr.cells[1].textContent.replace(/,/g,''))||0;
+        const d=Number(tr.cells[2].textContent.replace(/,/g,''))||0;
+        const total=a+d;
+        const rate=total?Math.round(a/total*100):0;
+        const td=document.createElement('td');
+        td.className='num';
+        td.textContent=rate+'%';
+        tr.appendChild(td);
+      });
+    }
+
+    // Daily Reports is a presentation summary of the already processed
+    // dashboard values. It intentionally does not modify classification logic.
+    const daily=$('dailyBody');
+    if(daily){
+      const dates=[];
+      rawRows.forEach(r=>{
+        const key=Object.keys(r).find(k=>/date.*time|call.*date|^date$|start.*time|created/i.test(k));
+        if(!key) return;
+        const d=new Date(r[key]);
+        if(!Number.isNaN(d.getTime())) dates.push(d);
+      });
+      let dateLabel='Selected report range';
+      if(dates.length){
+        dates.sort((a,b)=>a-b);
+        const fmt=d=>d.toISOString().slice(0,10);
+        dateLabel=fmt(dates[0])===fmt(dates[dates.length-1])?fmt(dates[0]):`${fmt(dates[0])} → ${fmt(dates[dates.length-1])}`;
+      }
+      daily.innerHTML=`<tr><td>${esc(dateLabel)}</td><td class="num">${$('mCampaigns').textContent}</td><td class="num">${a.toLocaleString()}</td><td class="num">${d.toLocaleString()}</td><td class="num">${total.toLocaleString()}</td></tr>`;
+    }
+
+    const ol=$('topCampaigns');
+    ol.innerHTML=rows.slice(0,5).map(([n,v])=>`<li><span>${esc(n)}</span><b>${v.a+v.d}</b></li>`).join('')||'<li>Waiting for report...</li>';
+    const trend=$('trendChart');
+    if(total){
+      trend.innerHTML=`<div class="trend-bars"><div class="bar-group"><div class="bar bluebar" style="height:${Math.max(12,Math.min(100,(a/Math.max(a,d,1))*100))}%"></div><span>Answered</span></div><div class="bar-group"><div class="bar redbar" style="height:${Math.max(12,Math.min(100,(d/Math.max(a,d,1))*100))}%"></div><span>Drop</span></div></div><div class="trend-axis">Selected report range</div>`;
+    }
+    const notice=$('unmappedNotice');
+    if(notice){const st=$('status').textContent||'';const m=st.match(/Unmapped:\s*([\d,]+)/i);notice.querySelector('span:nth-child(2)').textContent=m?`Unmapped calls: ${m[1]} rows could not be assigned to a campaign.`:'Upload and process a report to see unmapped call information.';}
+  }
+  const obsTarget=$('mAnswered');
+  if(obsTarget) new MutationObserver(()=>setTimeout(paintUI,0)).observe(obsTarget,{childList:true,characterData:true,subtree:true});
+  window.addEventListener('load',()=>setTimeout(paintUI,50));
+})();
+</script>
+</body>
+</html>
